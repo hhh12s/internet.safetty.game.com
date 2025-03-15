@@ -292,6 +292,81 @@
             border-color: red;
         }
 
+        /* Новые стили для блока с результатами */
+        .results-container {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .results-container.hidden {
+            display: none;
+        }
+
+        .results-container h2 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .results-container p {
+            font-size: 1.1rem;
+            margin: 0.5rem 0;
+        }
+
+        .results-container .total-score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--secondary);
+            margin-top: 1.5rem;
+        }
+
+        .results-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .result-item {
+            background: white;
+            border-radius: 1rem;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            flex: 1 1 calc(33.333% - 1.5rem);
+            max-width: 200px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .result-item p {
+            margin: 0;
+            font-size: 1rem;
+            color: var(--text);
+        }
+
+        .total-score {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
@@ -303,6 +378,16 @@
 
             .matching-game {
                 flex-direction: column;
+            }
+
+            .result-item {
+                flex: 1 1 calc(50% - 1.5rem);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .result-item {
+                flex: 1 1 100%;
             }
         }
     </style>
@@ -468,6 +553,32 @@
                 </div>
             </div>
             <button onclick="checkRound(6)">Проверить</button>
+        </div>
+
+        <!-- Блок с результатами -->
+        <div class="results-container hidden" id="results">
+            <h2>🎉 Игра завершена!</h2>
+            <p class="total-score">Общий результат: <span id="totalScore">0</span> из 35</p>
+            <div class="results-grid">
+                <div class="result-item">
+                    <p>Раунд 1: <span id="round1Result">0</span> из 10</p>
+                </div>
+                <div class="result-item">
+                    <p>Раунд 2: <span id="round2Result">0</span> из 6</p>
+                </div>
+                <div class="result-item">
+                    <p>Раунд 3: <span id="round3Result">0</span> из 7</p>
+                </div>
+                <div class="result-item">
+                    <p>Раунд 4: <span id="round4Result">0</span> из 4</p>
+                </div>
+                <div class="result-item">
+                    <p>Раунд 5: <span id="round5Result">0</span> из 3</p>
+                </div>
+                <div class="result-item">
+                    <p>Раунд 6: <span id="round6Result">0</span> из 5</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -940,7 +1051,102 @@
                     initNewRound(currentRound);
                 }, 300);
             } else {
-                showFinalScore();
+                showFinalResults();
+            }
+        }
+
+        // Показ итоговых результатов
+        function showFinalResults() {
+            // Скрываем все раунды
+            document.querySelectorAll('.round').forEach(round => {
+                round.classList.add('hidden');
+            });
+
+            // Перемещаем блок с результатами в конец контейнера
+            const resultsContainer = document.getElementById('results');
+            const container = document.querySelector('.container');
+            container.appendChild(resultsContainer);
+
+            // Показываем блок с результатами
+            resultsContainer.classList.remove('hidden');
+
+            // Анимация начисления баллов для каждого раунда
+            const roundResults = [
+                { id: 'round1Result', score: getRoundScore(1) },
+                { id: 'round2Result', score: getRoundScore(2) },
+                { id: 'round3Result', score: getRoundScore(3) },
+                { id: 'round4Result', score: getRoundScore(4) },
+                { id: 'round5Result', score: getRoundScore(5) },
+                { id: 'round6Result', score: getRoundScore(6) },
+            ];
+
+            // Функция для анимации начисления баллов
+            function animateResults(index) {
+                if (index >= roundResults.length) {
+                    // После начисления баллов для всех раундов анимируем общий результат
+                    const totalScoreElement = document.getElementById('totalScore');
+                    totalScoreElement.textContent = score;
+                    totalScoreElement.style.opacity = 1;
+                    totalScoreElement.style.transform = 'translateY(0)';
+                    return;
+                }
+
+                const result = roundResults[index];
+                const resultElement = document.getElementById(result.id);
+                resultElement.textContent = result.score;
+
+                // Анимация появления
+                resultElement.style.opacity = 1;
+                resultElement.style.transform = 'translateY(0)';
+
+                // Задержка перед следующим раундом
+                setTimeout(() => {
+                    animateResults(index + 1);
+                }, 300); // Задержка 300 мс
+            }
+
+            // Запуск анимации
+            animateResults(0);
+        }
+
+        // Получение результата по раунду
+        function getRoundScore(roundNumber) {
+            switch(roundNumber) {
+                case 1: 
+                    return document.querySelectorAll('#round1 .drop-zone .card[data-correct]').length;
+                case 2:
+                    return matchedPairs.size;
+                case 3:
+                    return Array.from(selectedAnswers.values()).filter(correct => correct === true).length;
+                case 4:
+                    // Считаем количество правильно собранных предложений
+                    const dropZones4 = document.querySelectorAll('#round4 .drop-zone');
+                    let correctSentences = 0;
+                    dropZones4.forEach((zone, index) => {
+                        const sentence = sentences[index];
+                        const partsInZone = Array.from(zone.children).map(card => card.textContent);
+                        if (partsInZone.join(' ') === sentence.parts.join(' ')) {
+                            correctSentences++;
+                        }
+                    });
+                    return correctSentences;
+                case 5:
+                    return document.querySelectorAll('#passwordRules .valid').length;
+                case 6:
+                    let correctRebuses = 0;
+                    for (let i = 1; i <= totalRebuses; i++) {
+                        const rebusElement = document.getElementById(`rebus${i}`);
+                        const input = rebusElement.querySelector('input');
+                        const userAnswer = input.value.trim().toLowerCase();
+                        const correctAnswer = input.dataset.answer;
+
+                        if (userAnswer === correctAnswer) {
+                            correctRebuses++;
+                        }
+                    }
+                    return correctRebuses;
+                default:
+                    return 0;
             }
         }
 
@@ -952,11 +1158,6 @@
                 case 5: initRound5(); break;
                 case 6: initRound6(); break;
             }
-        }
-
-        // Показ итогового результата
-        function showFinalScore() {
-            alert(`🎉 Игра завершена! Ваш результат: ${score} баллов из 35!`);
         }
 
         // Функция для перемешивания массива
